@@ -81,15 +81,16 @@ final class RobotsTxtTest extends TestCase
         $this->assertTrue($robotsTxt->isAllowed('/foo/bar', 'FooBot'));
     }
 
-    public function testMatchingDisallowedRuleWithinMatchingGroupAndMoreSpecificAllowedRuleWithinOtherMatchingGroup(): void
+    public function testAllowedRuleWithinWildcardGroupIsIgnoredWhenASpecificGroupMatches(): void
     {
+        // RFC 9309 2.3.: when a group with a specific product token matches, wildcard groups must be ignored.
         $matchingGroup = new UserAgentGroup(['FooBot']);
         $matchingGroup->addDisallowedPattern(new RulePattern('/foo'));
-        $otherMatchingGroup = new UserAgentGroup(['*']);
-        $otherMatchingGroup->addAllowedPattern(new RulePattern('/foo/bar'));
-        $robotsTxt = new RobotsTxt([$matchingGroup, $otherMatchingGroup]);
+        $wildcardGroup = new UserAgentGroup(['*']);
+        $wildcardGroup->addAllowedPattern(new RulePattern('/foo/bar'));
+        $robotsTxt = new RobotsTxt([$matchingGroup, $wildcardGroup]);
 
-        $this->assertTrue($robotsTxt->isAllowed('/foo/bar', 'FooBot'));
+        $this->assertFalse($robotsTxt->isAllowed('/foo/bar', 'FooBot'));
     }
 
     public function testMatchingDisallowedRuleAndMoreSpecificMatchingAllowedRuleButAlsoEvenMoreSpecificOtherMatchingDisallowedRuleWithinSameGroup(): void

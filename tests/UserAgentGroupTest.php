@@ -25,6 +25,14 @@ final class UserAgentGroupTest extends TestCase
         yield 'Case insensitive uppercase' => [['GoogleBot', 'FooBot', 'CrwlrBot',], 'foobot'];
         yield 'Case insensitive lowercase' => [['GoogleBot', 'FooBot', 'CrwlrBot',], 'FOOBOT'];
         yield 'Wildcard'                   => [['*',         'barbot',            ], 'foobot'];
+        yield 'Product token within user agent string with version' => [
+            ['GoogleBot', 'FooBot', 'CrwlrBot'],
+            'FooBot/2.1',
+        ];
+        yield 'Product token within full user agent string' => [
+            ['GoogleBot', 'FooBot', 'CrwlrBot'],
+            'Mozilla/5.0 (compatible; FooBot/1.0; +https://example.com/bot)',
+        ];
     }
 
     /**
@@ -35,7 +43,7 @@ final class UserAgentGroupTest extends TestCase
         yield 'No matching rules'   => [['/admin', '/secret', ], '/secret/notsosecret', '/contact'];
         yield 'Only matching rules' => [['/admin',            ], '/home',               'home'];
         yield 'More specific URI'   => [['/secret',           ], '/secret/notsosecret', '/secret/notsosecret/something'];
-        yield 'Equivalent rules'    => [['/foo',              ], '/bar',                '/foo/bar'];
+        yield 'Equivalent rules'    => [['/foo',              ], '/foo',                '/foo/bar'];
     }
 
     /**
@@ -54,6 +62,23 @@ final class UserAgentGroupTest extends TestCase
     public function test_contained_user_agent(array $userAgents, string $contains): void
     {
         $this->assertTrue((new UserAgentGroup($userAgents))->contains($contains));
+    }
+
+    public function test_not_contained_user_agent(): void
+    {
+        $userAgentGroup = new UserAgentGroup(['GoogleBot', 'FooBot']);
+
+        $this->assertFalse($userAgentGroup->contains('BarBot'));
+        $this->assertFalse($userAgentGroup->contains('BarBot/1.0'));
+        $this->assertFalse($userAgentGroup->contains('BarBot', false));
+    }
+
+    public function test_wildcard_does_not_count_when_wildcard_is_excluded(): void
+    {
+        $userAgentGroup = new UserAgentGroup(['*']);
+
+        $this->assertTrue($userAgentGroup->contains('FooBot'));
+        $this->assertFalse($userAgentGroup->contains('FooBot', false));
     }
 
     /**

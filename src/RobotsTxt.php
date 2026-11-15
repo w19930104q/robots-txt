@@ -85,20 +85,26 @@ final class RobotsTxt
     /**
      * Find all groups that match a certain user agent string.
      *
+     * RFC 9309 2.3.: a crawler must use the group(s) with the most specific user-agent line that still matches.
+     * So when at least one group with a specific (non wildcard) product token matches, wildcard (*) groups are
+     * ignored. Multiple matching groups (e.g. repeated groups for the same product token) are combined.
+     *
      * @param bool $includeWildcard  Set to false if wildcard (*) should not count (user agent explicitly in group)
      * @return UserAgentGroup[]
      */
     private function getGroupsMatchingUserAgent(string $userAgent, bool $includeWildcard = true): array
     {
-        $matchingGroups = [];
+        $specificGroups = $wildcardGroups = [];
 
         foreach ($this->groups() as $group) {
-            if ($group->contains($userAgent, $includeWildcard)) {
-                $matchingGroups[] = $group;
+            if ($group->contains($userAgent, false)) {
+                $specificGroups[] = $group;
+            } elseif ($includeWildcard && $group->contains($userAgent)) {
+                $wildcardGroups[] = $group;
             }
         }
 
-        return $matchingGroups;
+        return $specificGroups !== [] ? $specificGroups : $wildcardGroups;
     }
 
     /**

@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /search?*
+Allow: /search?page=home
+Disallow: /locked$

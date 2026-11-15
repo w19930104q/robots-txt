@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Group selection and path matching now follow RFC 9309: when a group with a specific product token matches the user agent, wildcard (`*`) groups are no longer also applied. Product tokens are matched case-insensitively within the user agent string (e.g. `FooBot` matches `FooBot/1.0`), repeated groups for the same product token are combined, allow/disallow rules are matched from the beginning of the path (so `/foo` no longer matches `/x/foo`), the longest matching rule decides and allow wins over disallow on equal length.
+
 ### Removed
 - Support for PHP 8.0.
 

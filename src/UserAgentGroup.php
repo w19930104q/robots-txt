@@ -36,10 +36,17 @@ final class UserAgentGroup
     public function contains(string $userAgent, bool $includeWildcard = true): bool
     {
         foreach ($this->userAgents as $groupUserAgent) {
-            if (
-                ($includeWildcard && $groupUserAgent === '*') ||
-                strtolower($groupUserAgent) === strtolower($userAgent)
-            ) {
+            if ($groupUserAgent === '*') {
+                if ($includeWildcard) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            // RFC 9309 2.3.: the product token is matched case-insensitively and can appear anywhere
+            // within the user agent string (e.g. "FooBot" matches "FooBot/1.0").
+            if ($groupUserAgent !== '' && stripos($userAgent, $groupUserAgent) !== false) {
                 return true;
             }
         }
@@ -139,8 +146,7 @@ final class UserAgentGroup
     }
 
     /**
-     * https://datatracker.ietf.org/doc/draft-koster-rep/
-     * 2.2.2.
+     * https://www.rfc-editor.org/rfc/rfc9309.html#section-2.2.2
      * "The most specific match found MUST be used. The most specific match is the match that has the most octets.
      * If an allow and disallow rule is equivalent, the allow SHOULD be used."
      *
@@ -149,26 +155,19 @@ final class UserAgentGroup
      */
     private function isAllowedByMostSpecificMatch(array $disallowedPatterns, array $allowedPatterns): bool
     {
-        $mostSpecificMatch = reset($allowedPatterns);
-
-        if (!$mostSpecificMatch) { // There is no matching allowed pattern.
-            return empty($disallowedPatterns);
-        }
-
-        $maxStrLen = strlen($mostSpecificMatch->pattern());
-
-        foreach ($allowedPatterns as $pattern) {
-            if (strlen($pattern->pattern()) > $maxStrLen) {
-                $maxStrLen = strlen($pattern->pattern());
-            }
-        }
+        $longestDisallowedMatch = 0;
 
         foreach ($disallowedPatterns as $pattern) {
-            if (strlen($pattern->pattern()) > $maxStrLen) {
-                return false;
+            $longestDisallowedMatch = max($longestDisallowedMatch, strlen($pattern->pattern()));
+        }
+
+        foreach ($allowedPatterns as $pattern) {
+            // An allow rule that is at least as long as the longest matching disallow rule wins.
+            if (strlen($pattern->pattern()) >= $longestDisallowedMatch) {
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 }

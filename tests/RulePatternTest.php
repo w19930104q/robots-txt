@@ -14,7 +14,7 @@ final class RulePatternTest extends TestCase
     public static function validPatternProvider(): Generator
     {
         yield 'Exact match'                                   => ['/home',              '/home'];
-        yield 'Partial match'                                 => ['/jobs/controlling/', '/company/jobs/controlling/controller-f-m-x-2021-10-23'];
+        yield 'Partial match'                                 => ['/jobs/controlling/', '/jobs/controlling/controller-f-m-x-2021-10-23'];
         yield 'Single wildcard in pattern'                    => ['/foo/*/bar',         '/foo/yo/bar'];
         yield 'Multiple wildcard in pattern'                  => ['/foo/*/bar*/baz',    '/foo/exa/mple/barbara/pew/pew/baz'];
         yield 'URI that has percent encoded ASCII characters' => ['/foo/bar',           '/foo/b%61r'];
@@ -35,6 +35,15 @@ final class RulePatternTest extends TestCase
     public function test_return_false_when_uri_does_not_match(): void
     {
         $this->assertFalse((new RulePattern('/home'))->matches('/contact'));
+    }
+
+    public function test_matching_starts_at_the_beginning_of_the_path(): void
+    {
+        $pattern = new RulePattern('/foo');
+        $this->assertTrue($pattern->matches('/foo'));
+        $this->assertTrue($pattern->matches('/foo/bar'));
+        $this->assertFalse($pattern->matches('/x/foo'));
+        $this->assertFalse($pattern->matches('/x/foo/bar'));
     }
 
     public function test_match_ends_with(): void

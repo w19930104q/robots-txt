@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /
+
+User-agent: FooBot
+Disallow: /private
+Allow: /private/public
+
+User-agent: FooBot
+Disallow: /also-private

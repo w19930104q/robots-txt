@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /p%61th
+Disallow: /dir/%E2%82%AC
+Allow: /path/public

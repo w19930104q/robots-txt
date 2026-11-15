@@ -37,7 +37,8 @@ final class RulePattern
         if ($this->preparedRegexPattern === null) {
             $pattern = Encoding::decodePercentEncodedAsciiCharactersInPath($this->pattern());
             $pattern = preg_quote($pattern, '/');
-            $this->preparedRegexPattern = '/' . str_replace(['\*', '\$'], ['.*', '$'], $pattern) . '/';
+            // RFC 9309 2.2.2.: matching starts at the beginning of the path (octet prefix match).
+            $this->preparedRegexPattern = '/^' . str_replace(['\*', '\$'], ['.*', '$'], $pattern) . '/';
         }
 
         return $this->preparedRegexPattern;
